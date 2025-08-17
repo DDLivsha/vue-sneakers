@@ -1,7 +1,4 @@
-<script
-   setup
-   lang="ts"
->
+<script setup lang="ts">
    import Card from './Card.vue'
    export type SneakersItem = {
       id: number
