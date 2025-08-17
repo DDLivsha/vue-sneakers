@@ -1,17 +1,14 @@
-<script
-   setup
-   lang="ts"
->
+<script setup lang="ts">
+   import { inject } from 'vue'
    import type { SneakersItem } from './CardList.vue'
 
    interface Props extends SneakersItem {
-      isFavorite?: boolean
-      isAdded?: boolean
-      addToFavorite?: () => void
+      addToFavorite?: (item: any) => void
       addToCart?: () => void
    }
 
    const props = defineProps<Props>()
+
 </script>
 
 <template>

@@ -24,14 +24,43 @@
 
          const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/items`, { params })
 
-         items.value = data
+         items.value = data.map((item: SneakersItem) => ({
+            ...item,
+            isFavorite: false,
+            isAdded: false
+         }))
       } catch (error) {
          console.log(error)
       }
    }
+
+   const fetchFavoritesData = async () => {
+      try {
+
+         const { data: favorites } = await axios.get(`${import.meta.env.VITE_API_URL}/favorites`)
+
+         items.value = items.value.map((item: SneakersItem) => {
+            const favorite = favorites.find((favorite: any) => favorite.parentId === item.id)
+
+            if (!favorite) {
+               return item
+            } else {
+               return {
+                  ...item,
+                  isFavorite: true,
+                  favoriteId: favorite.id
+               }
+            }
+         })
+      } catch (error) {
+         console.log(error)
+      }
+   }
+
    //========DEFAULT FETCH==========
    onMounted(async () => {
       await fetchData()
+      await fetchFavoritesData()
    })
 
    //========FILTERS==========
@@ -45,6 +74,30 @@
       debouncedFetch()
    })
 
+   const addToFavorite = async (item: SneakersItem) => {
+      if (!item.isFavorite) {
+         try {
+            item.isFavorite = true
+            const obj = {
+               parentId: item.id
+            }
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/favorites`, obj)
+            item.favoriteId = data.id
+         } catch (error) {
+            console.log(error)
+         }
+      } else {
+         try {
+            item.isFavorite = false
+            await axios.delete(`${import.meta.env.VITE_API_URL}/favorites/${item.favoriteId}`)
+         } catch (error) {
+            console.log(error)
+         }
+      }
+   }
+   const addToCart = async (item: SneakersItem) => {
+      item.isAdded = true
+   }
 </script>
 
 <template>
@@ -82,7 +135,11 @@
             </div>
          </div>
 
-         <CardList :items="items" />
+         <CardList
+            :items="items"
+            @addToFavorite="addToFavorite"
+            @addToCart="addToCart"
+         />
       </div>
    </div>
 </template>
