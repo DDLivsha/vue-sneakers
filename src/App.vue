@@ -1,5 +1,5 @@
 <script setup lang="ts">
-   import { onMounted, ref, watch } from 'vue'
+   import { computed, onMounted, provide, ref, watch } from 'vue'
    import CardList from './components/CardList.vue'
    import Drawer from './components/Drawer.vue'
    import MyHeader from './components/MyHeader.vue'
@@ -8,9 +8,15 @@
    import debounce from 'lodash/debounce'
 
    const items = ref<SneakersItem[]>([])
+   const drawerOpen = ref(false)
    const sortBy = ref('title')
    const localSearch = ref('')
+   const cart = ref<SneakersItem[]>([])
+   const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0))
+   const vatPrice = computed(() => totalPrice.value * 0.05)
+   provide('prices', { totalPrice, vatPrice })
 
+   //========DEFAULT FETCH==========
    const fetchData = async () => {
       try {
 
@@ -33,7 +39,6 @@
          console.log(error)
       }
    }
-
    const fetchFavoritesData = async () => {
       try {
 
@@ -56,8 +61,6 @@
          console.log(error)
       }
    }
-
-   //========DEFAULT FETCH==========
    onMounted(async () => {
       await fetchData()
       await fetchFavoritesData()
@@ -74,6 +77,7 @@
       debouncedFetch()
    })
 
+   //========ADD TO FAVORITE & ADD TO CART==========
    const addToFavorite = async (item: SneakersItem) => {
       if (!item.isFavorite) {
          try {
@@ -96,14 +100,32 @@
       }
    }
    const addToCart = async (item: SneakersItem) => {
-      item.isAdded = true
+      if (!item.isAdded) {
+         cart.value.push(item)
+         item.isAdded = true
+      }
    }
+   const removeFromCart = async (item: SneakersItem) => {
+      if (item.isAdded) {
+         cart.value = cart.value.filter((i: SneakersItem) => i.id !== item.id)
+         item.isAdded = false
+      }
+   }
+   provide('removeFromCart', removeFromCart)
+
+   //========DRAWER==========
+   const toggleDrawer = () => {
+      drawerOpen.value = !drawerOpen.value
+   }
+   provide('toggleDrawer', toggleDrawer)
+   provide('cart', cart)
+
 </script>
 
 <template>
-   <!-- <Drawer /> -->
+   <Drawer v-if="drawerOpen" />
    <div class="w-4/5 mx-auto bg-slate-100 rounded-xl shadow-xl mt-14">
-      <MyHeader />
+      <MyHeader :totalPrice="totalPrice" />
       <div class="p-10">
          <div class="flex items-center gap-4 justify-between">
             <h2 class="text-3xl font-bold">Усі кросівки</h2>

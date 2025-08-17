@@ -1,23 +1,24 @@
-<script
-   setup
-   lang="ts"
-></script>
+<script setup lang="ts">
+   import { inject } from 'vue'
+   const { totalPrice, vatPrice } = inject<{ totalPrice: number, vatPrice: number }>('prices', { totalPrice: 0, vatPrice: 0 })
+</script>
 
 <template>
    <div class="flex flex-col gap-4 my-6">
       <div class="flex items-end gap-2">
          <span>Всього:</span>
          <div class="border-b border-slate-200 h-[1px] flex-1 border-dashed"></div>
-         <b>12000 грн</b>
+         <b>{{ totalPrice }} грн</b>
       </div>
       <div class="flex items-end gap-2">
          <span>Податок(5%):</span>
          <div class="border-b border-slate-200 h-[1px] flex-1 border-dashed"></div>
-         <b>12000 грн</b>
+         <b>{{ vatPrice.toFixed(0) }} грн</b>
       </div>
    </div>
    <button
       class="bg-lime-500 w-full rounded-xl py-3 text-white flex items-center justify-between gap-4 cursor-pointer disabled:bg-slate-400 disabled:cursor-auto active:bg-lime-700 hover:bg-lime-600 transition-all duration-300 px-4"
+      :disabled="totalPrice === 0"
    >
       <span></span> Оформити замовлення
       <img
