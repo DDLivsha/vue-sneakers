@@ -1,6 +1,7 @@
-<script setup lang="ts">
-
-</script>
+<script
+   setup
+   lang="ts"
+></script>
 
 <template>
    <div class="flex flex-col gap-4 my-6">
@@ -16,8 +17,14 @@
       </div>
    </div>
    <button
-      class="bg-lime-500 w-full rounded-xl py-3 text-white flex items-center justify-between gap-4 cursor-pointer disabled:bg-slate-400 disabled:cursor-auto active:bg-lime-700 hover:bg-lime-600 transition-all duration-300 px-4">
-      <span></span> Оформити замовлення <img src="/arrow-next.svg" alt="next to pay"></button>
+      class="bg-lime-500 w-full rounded-xl py-3 text-white flex items-center justify-between gap-4 cursor-pointer disabled:bg-slate-400 disabled:cursor-auto active:bg-lime-700 hover:bg-lime-600 transition-all duration-300 px-4"
+   >
+      <span></span> Оформити замовлення
+      <img
+         src="/arrow-next.svg"
+         alt="next to pay"
+      />
+   </button>
 </template>
 
 <style scoped></style>
