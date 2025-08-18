@@ -15,6 +15,10 @@
    const totalPrice = computed(() => cart.value.reduce((acc, item) => acc + item.price, 0))
    const vatPrice = computed(() => totalPrice.value * 0.05)
    provide('prices', { totalPrice, vatPrice })
+   const isCreateOrder = ref(false)
+   provide('isCreateOrder', isCreateOrder)
+   const isSuccessOrder = ref(false)
+   provide('isSuccessOrder', isSuccessOrder)
 
    //========DEFAULT FETCH==========
    const fetchData = async () => {
@@ -119,6 +123,48 @@
    }
    provide('toggleDrawer', toggleDrawer)
    provide('cart', cart)
+
+   let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+   function triggerSuccess() {
+      if (timeoutId) {
+         clearTimeout(timeoutId)
+      }
+
+      isSuccessOrder.value = true
+
+      timeoutId = setTimeout(() => {
+         isSuccessOrder.value = false
+         toggleDrawer()
+         timeoutId = null
+      }, 1500)
+   }
+
+   //=======ORDER==========
+   const createOrder = async () => {
+      try {
+         isCreateOrder.value = true
+         await axios.post(`${import.meta.env.VITE_API_URL}/orders`, {
+            items: cart.value,
+            totalPrice: totalPrice.value
+         })
+         cart.value = []
+         triggerSuccess()
+      } catch (error) {
+         console.log(error)
+      } finally {
+         isCreateOrder.value = false
+      }
+   }
+   provide('createOrder', createOrder)
+
+   watch(cart, () => {
+      items.value.map((item: SneakersItem) => {
+         if (item.isAdded) {
+            item.isAdded = false
+         }
+      })
+   } )
 
 </script>
 
