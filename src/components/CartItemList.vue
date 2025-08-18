@@ -9,7 +9,7 @@
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 max-h-[60dvh] flex-1 overflow-y-auto">
+  <div v-auto-animate class="flex flex-col gap-4 max-h-[60dvh] flex-1 overflow-y-auto">
     <CartItem
       v-for="item in cart"
       :key="item.id"

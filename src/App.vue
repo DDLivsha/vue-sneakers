@@ -66,8 +66,20 @@
       }
    }
    onMounted(async () => {
+      const localCart = localStorage.getItem('cart')
+      if (localCart) {
+         cart.value = JSON.parse(localCart)
+         
+      }
       await fetchData()
       await fetchFavoritesData()
+
+      items.value = items.value.map((item: SneakersItem) => {
+         return {
+            ...item,
+            isAdded: cart.value.some((cartItem: SneakersItem) => cartItem.id === item.id)
+         }
+      })
    })
 
    //========FILTERS==========
@@ -159,12 +171,8 @@
    provide('createOrder', createOrder)
 
    watch(cart, () => {
-      items.value.map((item: SneakersItem) => {
-         if (item.isAdded) {
-            item.isAdded = false
-         }
-      })
-   } )
+      localStorage.setItem('cart', JSON.stringify(cart.value))
+   }, { deep: true })
 
 </script>
 
