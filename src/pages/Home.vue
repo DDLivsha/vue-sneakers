@@ -1,0 +1,153 @@
+<script setup lang="ts">
+   import axios from 'axios'
+   import CardList from '../components/CardList.vue'
+   import type { SneakersItem } from '../components/CardList.vue'
+   import { inject, onMounted, ref, watch } from 'vue';
+   import debounce from 'lodash/debounce';
+
+   const sortBy = ref('title')
+   const localSearch = ref('')
+   const items = ref<SneakersItem[]>([])
+   const cart = inject<SneakersItem[]>('cart', [])
+
+   const addToFavorite = async (item: SneakersItem) => {
+      if (!item.isFavorite) {
+         try {
+            item.isFavorite = true
+            const obj = {
+               parentId: item.id
+            }
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/favorites`, obj)
+            item.favoriteId = data.id
+         } catch (error) {
+            console.log(error)
+         }
+      } else {
+         try {
+            item.isFavorite = false
+            await axios.delete(`${import.meta.env.VITE_API_URL}/favorites/${item.favoriteId}`)
+         } catch (error) {
+            console.log(error)
+         }
+      }
+   }
+   const addToCart = async (item: SneakersItem) => {
+      if (!item.isAdded) {
+         cart.push(item)
+         item.isAdded = true
+      }
+   }
+
+   //========DEFAULT FETCH==========
+   const fetchData = async () => {
+      try {
+
+         const params: { sortBy: string, title?: string } = {
+            sortBy: sortBy.value,
+         }
+
+         if (localSearch.value) {
+            params.title = `*${localSearch.value}*`
+         }
+
+         const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/items`, { params })
+
+         items.value = data.map((item: SneakersItem) => ({
+            ...item,
+            isFavorite: false,
+            isAdded: false
+         }))
+      } catch (error) {
+         console.log(error)
+      }
+   }
+   const fetchFavoritesData = async () => {
+      try {
+
+         const { data: favorites } = await axios.get(`${import.meta.env.VITE_API_URL}/favorites`)
+
+         items.value = items.value.map((item: SneakersItem) => {
+            const favorite = favorites.find((favorite: any) => favorite.parentId === item.id)
+
+            if (!favorite) {
+               return item
+            } else {
+               return {
+                  ...item,
+                  isFavorite: true,
+                  favoriteId: favorite.id
+               }
+            }
+         })
+      } catch (error) {
+         console.log(error)
+      }
+   }
+
+   onMounted(async () => {
+      const localCart = localStorage.getItem('cart')
+      if (localCart) {
+         cart.value = JSON.parse(localCart)
+      }
+      await fetchData()
+      await fetchFavoritesData()
+
+      items.value = items.value.map((item: SneakersItem) => {
+         return {
+            ...item,
+            isAdded: cart.value.some((cartItem: SneakersItem) => cartItem.id === item.id)
+         }
+      })
+   })
+
+   //========FILTERS==========
+   watch(sortBy, async () => {
+      await fetchData()
+   })
+
+   const debouncedFetch = debounce(fetchData, 500)
+
+   watch(localSearch, () => {
+      debouncedFetch()
+   })
+</script>
+
+<template>
+   <div class="flex items-center gap-4 justify-between">
+      <h2 class="text-3xl font-bold">Усі кросівки</h2>
+
+      <div class="flex items-center gap-4">
+         <select
+            class="py-2 px-3 border border-gray-200 rounded-md outline-none"
+            name="FilterInput"
+            id="Filter"
+            v-model="sortBy"
+         >
+            <option value="title">По назві</option>
+            <option value="price">По ціні (від низької)</option>
+            <option value="-price">По ціні (від високої)</option>
+         </select>
+         <div class="relative">
+            <img
+               class="absolute top-3 left-3"
+               src="/search.svg"
+               alt="search"
+            />
+            <input
+               type="text"
+               placeholder="Пошук..."
+               class="pr-4 pl-10 py-2 border border-gray-200 rounded-md outline-none focus:border-gray-400"
+               v-model="localSearch"
+            />
+         </div>
+      </div>
+   </div>
+
+   <CardList
+      :items="items"
+      @addToFavorite="addToFavorite"
+      @addToCart="addToCart"
+   />
+</template>
+
+<style scoped></style>
